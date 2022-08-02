@@ -652,6 +652,48 @@ void TiXmlElement::Print(FILE* cfile, int depth) const {
     }
 }
 
+#ifdef TIXML_USE_STL
+void TiXmlElement::PrintToStr(std::string& voStr, int depth) const {
+    // int i;
+    voStr.append("<");
+    voStr.append(value.c_str());
+
+    const TiXmlAttribute* attrib;
+    for (attrib = attributeSet.First(); attrib; attrib = attrib->Next()) {
+        voStr.append(" ");
+        attrib->PrintToStr(voStr, depth);
+    }
+
+    // There are 3 different formatting approaches:
+    // 1) An element without children is printed as a <foo /> node
+    // 2) An element with only a text child is printed as <foo> text </foo>
+    // 3) An element with children is printed on multiple lines.
+    TiXmlNode* node;
+    if (!firstChild) {
+        voStr.append(" />");
+    } else if (firstChild == lastChild && firstChild->ToText()) {
+        // svg never go here.
+    } else {
+        voStr.append(">");
+
+        for (node = firstChild; node; node = node->NextSibling()) {
+            if (!node->ToText()) {
+                voStr.append("\n");
+            }
+            node->PrintToStr(voStr, depth + 1);
+        }
+        voStr.append("\n");
+        // for( i=0; i<depth; ++i ) {
+        // 	voStr.append("    ");
+        // }
+        // fprintf( cfile, "</%s>", value.c_str() );
+        voStr.append("</");
+        voStr.append(value.c_str());
+        voStr.append(">");
+    }
+}
+#endif
+
 void TiXmlElement::CopyTo(TiXmlElement* target) const {
     // superclass:
     TiXmlNode::CopyTo(target);
@@ -874,6 +916,12 @@ bool TiXmlDocument::SaveFile(FILE* fp) const {
     return (ferror(fp) == 0);
 }
 
+#ifdef TIXML_USE_STL
+void TiXmlDocument::SaveSvgToStr(std::string& voSvg) {
+    PrintToStr(voSvg, 0);
+}
+#endif
+
 void TiXmlDocument::CopyTo(TiXmlDocument* target) const {
     TiXmlNode::CopyTo(target);
 
@@ -905,6 +953,15 @@ void TiXmlDocument::Print(FILE* cfile, int depth) const {
         fprintf(cfile, "\n");
     }
 }
+
+#ifdef TIXML_USE_STL
+void TiXmlDocument::PrintToStr(std::string& voStr, int depth) const {
+    for (const TiXmlNode* node = FirstChild(); node; node = node->NextSibling()) {
+        node->PrintToStr(voStr, depth);
+        voStr.append("\n");
+    }
+}
+#endif
 
 bool TiXmlDocument::Accept(TiXmlVisitor* visitor) const {
     if (visitor->VisitEnter(*this)) {
@@ -979,6 +1036,27 @@ void TiXmlAttribute::Print(FILE* cfile, int /*depth*/, TIXML_STRING* str) const 
         }
     }
 }
+
+#ifdef TIXML_USE_STL
+void TiXmlAttribute::PrintToStr(std::string& voStr, int depth) const {
+    TIXML_STRING n, v;
+
+    EncodeString(name, &n);
+    EncodeString(value, &v);
+
+    if (value.find('\"') == TIXML_STRING::npos) {
+        voStr.append(n.c_str());
+        voStr.append("=\"");
+        voStr.append(v.c_str());
+        voStr.append("\"");
+    } else {
+        voStr.append(n.c_str());
+        voStr.append("='");
+        voStr.append(v.c_str());
+        voStr.append("'");
+    }
+}
+#endif
 
 int TiXmlAttribute::QueryIntValue(int* ival) const {
     if (TIXML_SSCANF(value.c_str(), "%d", ival) == 1) return TIXML_SUCCESS;

@@ -195,6 +195,9 @@ public:
             (For an unformatted stream, use the << operator.)
     */
     virtual void Print(FILE* cfile, int depth) const = 0;
+#ifdef TIXML_USE_STL
+    virtual void PrintToStr(std::string& voStr, int depth) const = 0;
+#endif
 
     /**	The world does not agree on whether white space should be kept or
             not. In order to make everyone happy, these global, static functions
@@ -202,10 +205,14 @@ public:
             into a single space or not. The default is to condense. Note changing this
             value is not thread safe.
     */
-    static void SetCondenseWhiteSpace(bool condense) { condenseWhiteSpace = condense; }
+    static void SetCondenseWhiteSpace(bool condense) {
+        condenseWhiteSpace = condense;
+    }
 
     /// Return the current white space setting.
-    static bool IsWhiteSpaceCondensed() { return condenseWhiteSpace; }
+    static bool IsWhiteSpaceCondensed() {
+        return condenseWhiteSpace;
+    }
 
     /** Return the position, in the original source file, of this node or attribute.
             The row and column are 1-based. (That is the first row and first column is
@@ -225,12 +232,22 @@ public:
 
             @sa TiXmlDocument::SetTabSize()
     */
-    int Row() const { return location.row + 1; }
-    int Column() const { return location.col + 1; }  ///< See Row()
+    int Row() const {
+        return location.row + 1;
+    }
+    int Column() const {
+        return location.col + 1;
+    }  ///< See Row()
 
-    void SetUserData(void* user) { userData = user; }     ///< Set a pointer to arbitrary user data.
-    void* GetUserData() { return userData; }              ///< Get a pointer to arbitrary user data.
-    const void* GetUserData() const { return userData; }  ///< Get a pointer to arbitrary user data.
+    void SetUserData(void* user) {
+        userData = user;
+    }  ///< Set a pointer to arbitrary user data.
+    void* GetUserData() {
+        return userData;
+    }  ///< Get a pointer to arbitrary user data.
+    const void* GetUserData() const {
+        return userData;
+    }  ///< Get a pointer to arbitrary user data.
 
     // Table that returs, for a given lead byte, the total number of bytes
     // in the UTF-8 sequence.
@@ -267,7 +284,9 @@ public:
 protected:
     static const char* SkipWhiteSpace(const char*, TiXmlEncoding encoding);
 
-    inline static bool IsWhiteSpace(char c) { return (isspace((unsigned char) c) || c == '\n' || c == '\r'); }
+    inline static bool IsWhiteSpace(char c) {
+        return (isspace((unsigned char) c) || c == '\n' || c == '\r');
+    }
     inline static bool IsWhiteSpace(int c) {
         if (c < 256) return IsWhiteSpace((char) c);
         return false;  // Again, only truly correct for English/Latin...but usually works.
@@ -408,6 +427,10 @@ public:
     /// Appends the XML node or attribute to a std::string.
     friend std::string& operator<<(std::string& out, const TiXmlNode& base);
 
+#endif
+
+#ifdef TIXML_USE_STL
+    virtual void PrintToStr(std::string& voStr, int depth) const {};
 #endif
 
     /** The types of XML nodes supported by TinyXml. (All the
@@ -929,6 +952,10 @@ public:
     }
     void Print(FILE* cfile, int depth, TIXML_STRING* str) const;
 
+#ifdef TIXML_USE_STL
+    virtual void PrintToStr(std::string& voStr, int depth) const;
+#endif
+
     // [internal use]
     // Set the document pointer so the attribute can report errors.
     void SetDocument(TiXmlDocument* doc) {
@@ -1184,6 +1211,9 @@ public:
     virtual TiXmlNode* Clone() const;
     // Print the Element to a FILE stream.
     virtual void Print(FILE* cfile, int depth) const;
+#ifdef TIXML_USE_STL
+    virtual void PrintToStr(std::string& voStr, int depth) const;
+#endif
 
     /*	Attribtue parsing starts: next char past '<'
                                              returns: next char past '>'
@@ -1504,6 +1534,10 @@ public:
     bool LoadFile(FILE*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
     /// Save a file using the given FILE*. Returns true if successful.
     bool SaveFile(FILE*) const;
+#ifdef TIXML_USE_STL
+    /* only for SVG */
+    void SaveSvgToStr(std::string& voSvg);
+#endif
 
 #ifdef TIXML_USE_STL
     bool LoadFile(const std::string& filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING)  ///< STL std::string version.
@@ -1624,6 +1658,10 @@ public:
 
     /// Print this Document to a FILE stream.
     virtual void Print(FILE* cfile, int depth = 0) const;
+#ifdef TIXML_USE_STL
+    virtual void PrintToStr(std::string& voStr, int depth) const;
+#endif
+
     // [internal use]
     void SetError(int err, const char* errorLocation, TiXmlParsingData* prevData, TiXmlEncoding encoding);
 

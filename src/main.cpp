@@ -58,7 +58,7 @@ int main(int argc, char const* argv[]) {
         // 保存到文件
         xml_doc.SaveFile("example.svg");
         std::string svgStr;
-        // xml_doc.SaveSvgStr(svgStr);
+        xml_doc.SaveSvgToStr(svgStr);
 
         std::cout << "svg generate accomplished!\n" << svgStr << std::endl;
     }
